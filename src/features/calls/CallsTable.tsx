@@ -53,22 +53,23 @@ const CallsTable: React.FC<CallsTableProps> = ({ calls }) => {
 
       {/* Сегодня */}
       {todayCalls.length > 0 && (
-        <div>
+        <ul>
           {todayCalls.map((call) => (
-            <CallRow
-              key={call.id}
-              type={call.type}
-              time={call.time}
-              avatar={call.avatar}
-              initials={call.initials}
-              phone={call.phone}
-              source={call.source}
-              grade={call.grade}
-              duration={call.duration}
-              hasRecord={call.hasRecord}
-            />
+            <li key={call.id}>
+              <CallRow
+                type={call.type}
+                time={call.time}
+                avatar={call.avatar}
+                initials={call.initials}
+                phone={call.phone}
+                source={call.source}
+                grade={call.grade}
+                duration={call.duration}
+                hasRecord={call.hasRecord}
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       {/* Разделитель "Вчера" */}
@@ -85,22 +86,23 @@ const CallsTable: React.FC<CallsTableProps> = ({ calls }) => {
             </div>
           </div>
 
-          <div>
+          <ul>
             {yesterdayCalls.map((call) => (
-              <CallRow
-                key={call.id}
-                type={call.type}
-                time={call.time}
-                avatar={call.avatar}
-                initials={call.initials}
-                phone={call.phone}
-                source={call.source}
-                grade={call.grade}
-                duration={call.duration}
-                hasRecord={call.hasRecord}
-              />
+              <li key={call.id}>
+                <CallRow
+                  type={call.type}
+                  time={call.time}
+                  avatar={call.avatar}
+                  initials={call.initials}
+                  phone={call.phone}
+                  source={call.source}
+                  grade={call.grade}
+                  duration={call.duration}
+                  hasRecord={call.hasRecord}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         </>
       )}
     </div>
