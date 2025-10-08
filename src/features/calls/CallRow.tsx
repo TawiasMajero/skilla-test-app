@@ -1,19 +1,9 @@
-import React from "react";
-import CallIcon from "../../shared/ui/CallIcon";
-import Avatar from "../../shared/ui/Avatar";
-import Badge from "../../shared/ui/Badge";
-
-interface CallRowProps {
-  type: "incoming" | "outgoing" | "missed" | "missed-outgoing";
-  time: string;
-  avatar?: string;
-  initials?: string;
-  phone: string;
-  source?: string;
-  grade?: "excellent" | "good" | "bad";
-  duration: string;
-  hasRecord?: boolean;
-}
+import React, { useState } from 'react';
+import CallIcon from '../../shared/ui/CallIcon';
+import Avatar from '../../shared/ui/Avatar';
+import Badge from '../../shared/ui/Badge';
+import AudioPlayer from './audio/AudioPlayer';
+import type { CallRowProps } from '../../shared/types/component.types';
 
 const CallRow: React.FC<CallRowProps> = ({
   type,
@@ -25,9 +15,26 @@ const CallRow: React.FC<CallRowProps> = ({
   grade,
   duration,
   hasRecord,
+  recordId,
+  partnershipId,
 }) => {
+  const [showPlayer, setShowPlayer] = useState(false);
+
+  const handleRowClick = () => {
+    if (hasRecord && recordId && partnershipId) {
+      setShowPlayer(!showPlayer);
+    }
+  };
+
   return (
-    <div className="flex items-center px-10 py-0 h-[65px] border-b border-border hover:bg-gray-50 transition-colors">
+    <div 
+      className={`relative flex items-center px-10 h-[65px] border-b transition-colors ${
+        showPlayer 
+          ? 'bg-[rgba(212,223,243,0.17)] border-[rgba(234,240,250,0.99)]' 
+          : 'border-border hover:bg-gray-50 cursor-pointer'
+      }`}
+      onClick={handleRowClick}
+    >
       {/* Тип звонка */}
       <div className="w-[54px]">
         <CallIcon type={type} />
@@ -61,30 +68,30 @@ const CallRow: React.FC<CallRowProps> = ({
         )}
       </div>
 
-      {/* Оценка */}
+      {/* Оценка и плеер */}
       <div className="w-[461px] flex items-center gap-2">
         {grade && (
           <Badge variant={grade}>
-            {grade === "excellent"
-              ? "Отлично"
-              : grade === "good"
-              ? "Хорошо"
-              : "Плохо"}
+            {grade === 'excellent' ? 'Отлично' : grade === 'good' ? 'Хорошо' : 'Плохо'}
           </Badge>
-        )}
-        {hasRecord && (
-          <div className="w-4 h-4 text-icon">
-            {/* Иконка записи - добавим позже */}
-          </div>
         )}
       </div>
 
-      {/* Длительность */}
-      <div className="w-[110px] text-right">
-        <span className="font-sf-pro text-[15px] leading-[140%] tracking-[0.01em] text-text-primary">
-          {duration}
-        </span>
-      </div>
+      {/* Длительность или плеер */}
+<div className="w-[110px] flex justify-end items-center">
+  {showPlayer && recordId && partnershipId ? (
+    <div 
+      className="absolute right-10 flex items-center bg-[rgba(234,240,250,0.99)] rounded-[48px] px-4 py-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <AudioPlayer recordId={recordId} partnershipId={partnershipId} onClose={() => setShowPlayer(false)}/>
+    </div>
+  ) : (
+    <span className="font-sf-pro text-[15px] leading-[140%] tracking-[0.01em] text-text-primary text-right">
+      {duration}
+    </span>
+  )}
+</div>
     </div>
   );
 };

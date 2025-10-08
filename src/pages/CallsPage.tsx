@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useGetCallsQuery } from "../app/api/skillaApi";
+import type { GetCallsParams } from "../shared/types/api.types";
 import CallsTable from "../features/calls/CallsTable";
 import CallsFilters from "../features/calls/CallsFilters";
 import type { Call } from "../shared/types/api.types";
@@ -74,7 +75,7 @@ const CallsPage = () => {
   const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
   // Параметры для API
-  const params = {
+  const params: GetCallsParams = {
     date_start: formatDate(dateStart),
     date_end: formatDate(dateEnd),
     in_out:
@@ -91,26 +92,31 @@ const CallsPage = () => {
   const transformedCalls = useMemo(() => {
     if (!data?.results) return [];
 
-    return data.results.map((call) => ({
+    return data.results.map((call) => {
+      const avatarRaw = call.person_avatar;
+      const avatarStr = typeof avatarRaw === "string" ? avatarRaw : String(avatarRaw ?? "");
+  const hasAvatar = avatarStr && avatarStr !== "null" && avatarStr !== "undefined";
+
+      return {
       id: call.id,
       type: getCallType(call),
       time: formatTime(call.date),
-      avatar: call.person_avatar.includes("noavatar")
+      avatar: hasAvatar ? avatarStr : undefined,
+      initials: hasAvatar
         ? undefined
-        : call.person_avatar,
-      initials: call.person_avatar.includes("noavatar")
-        ? `${call.person_name[0] || ""}${
-            call.person_surname[0] || ""
-          }`.toUpperCase()
-        : undefined,
+        : `${call.person_name?.[0] || ""}${call.person_surname?.[0] || ""}`.toUpperCase(),
       phone: call.from_number,
       source: call.source || call.line_name,
       grade: getRandomGrade(),
       duration: formatDuration(call.time),
       hasRecord: !!call.record,
       date: getDateLabel(call.date),
-    }));
+      recordId: call.record,
+      partnershipId: call.partnership_id,
+    };
+    });
   }, [data]);
+
 
   const handleFilterChange = (filter: string) => {
     setSelectedFilter(filter);
@@ -119,6 +125,7 @@ const CallsPage = () => {
   const handleDateChange = (days: number) => {
     setSelectedDays(days);
   };
+
 
   if (isLoading) {
     return (

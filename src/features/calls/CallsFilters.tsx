@@ -1,9 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-
-interface CallsFiltersProps {
-  onFilterChange?: (filter: string) => void;
-  onDateChange?: (days: number) => void;
-}
+import type { CallsFiltersProps } from "../../shared/types/component.types";
 
 const CallsFilters: React.FC<CallsFiltersProps> = ({
   onFilterChange,

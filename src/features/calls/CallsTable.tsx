@@ -1,28 +1,49 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import CallRow from "./CallRow";
-
-interface Call {
-  id: number;
-  type: "incoming" | "outgoing" | "missed" | "missed-outgoing";
-  time: string;
-  avatar?: string;
-  initials?: string;
-  phone: string;
-  source?: string;
-  grade?: "excellent" | "good" | "bad";
-  duration: string;
-  hasRecord?: boolean;
-  date: "today" | "yesterday";
-}
-
-interface CallsTableProps {
-  calls: Call[];
-}
+import type { CallsTableProps, TableCall } from "../../shared/types/component.types";
 
 const CallsTable: React.FC<CallsTableProps> = ({ calls }) => {
+  const [sortBy, setSortBy] = useState<"" | "time" | "duration">("");
+  const [order, setOrder] = useState<"asc" | "desc">("desc");
+
+  // Преобразуем и сортируем звонки клиентски перед группировкой
+  const sortedCalls = useMemo<TableCall[]>(() => {
+    if (!calls || calls.length === 0) return [] as TableCall[];
+
+    const copy = [...calls];
+    const parseDuration = (d: string) => {
+      const parts = d.split(":").map((p) => Number(p));
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      return 0;
+    };
+
+    copy.sort((a, b) => {
+      if (sortBy === "time") {
+        const ta = a.time;
+        const tb = b.time;
+        if (ta === tb) return 0;
+        const cmp = ta < tb ? -1 : 1;
+        return order === "asc" ? cmp : -cmp;
+      }
+
+      if (sortBy === "duration") {
+        const da = parseDuration(a.duration || "0:00");
+        const db = parseDuration(b.duration || "0:00");
+        if (da === db) return 0;
+        const cmp = da < db ? -1 : 1;
+        return order === "asc" ? cmp : -cmp;
+      }
+
+      return 0;
+    });
+
+    return copy;
+  }, [calls, sortBy, order]);
+
   // Группируем звонки по датам
-  const todayCalls = calls.filter((call) => call.date === "today");
-  const yesterdayCalls = calls.filter((call) => call.date === "yesterday");
+  const todayCalls = sortedCalls.filter((call) => call.date === "today");
+  const yesterdayCalls = sortedCalls.filter((call) => call.date === "yesterday");
 
   return (
     <div className="w-full bg-white rounded-lg shadow-[0px_4px_5px_#E9EDF3]">
@@ -31,9 +52,33 @@ const CallsTable: React.FC<CallsTableProps> = ({ calls }) => {
         <div className="w-[54px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87">
           Тип
         </div>
-        <div className="w-[88px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87">
-          Время
-        </div>
+        <button
+          onClick={() => {
+            if (sortBy === "time") setOrder((o) => (o === "asc" ? "desc" : "asc"));
+            else {
+              setSortBy("time");
+              setOrder("desc");
+            }
+          }}
+          className="w-[88px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87 flex items-center gap-2"
+        >
+          <span>Время</span>
+          <svg
+            width="10"
+            height="6"
+            viewBox="0 0 10 6"
+            fill="none"
+            className={`transition-transform ${sortBy === "time" && order === "asc" ? "rotate-180" : ""}`}
+          >
+            <path
+              d="M1 1L5 5L9 1"
+              stroke={sortBy === "time" ? "#002CFB" : "#ADBFDF"}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
         <div className="w-[129px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87">
           Сотрудник
         </div>
@@ -46,9 +91,33 @@ const CallsTable: React.FC<CallsTableProps> = ({ calls }) => {
         <div className="w-[461px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87">
           Оценка
         </div>
-        <div className="w-[110px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87 text-right">
-          Длительность
-        </div>
+        <button
+          onClick={() => {
+            if (sortBy === "duration") setOrder((o) => (o === "asc" ? "desc" : "asc"));
+            else {
+              setSortBy("duration");
+              setOrder("desc");
+            }
+          }}
+          className="w-[110px] font-sf-pro text-[14px] leading-[148%] text-text-secondary opacity-87 text-right flex items-center justify-end gap-2"
+        >
+          <span>Длительность</span>
+          <svg
+            width="10"
+            height="6"
+            viewBox="0 0 10 6"
+            fill="none"
+            className={`transition-transform ${sortBy === "duration" && order === "asc" ? "rotate-180" : ""}`}
+          >
+            <path
+              d="M1 1L5 5L9 1"
+              stroke={sortBy === "duration" ? "#002CFB" : "#ADBFDF"}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Сегодня */}
@@ -66,6 +135,8 @@ const CallsTable: React.FC<CallsTableProps> = ({ calls }) => {
                 grade={call.grade}
                 duration={call.duration}
                 hasRecord={call.hasRecord}
+                recordId={call.recordId}
+                partnershipId={call.partnershipId}
               />
             </li>
           ))}
